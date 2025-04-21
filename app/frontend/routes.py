@@ -1,6 +1,6 @@
-from flask import Blueprint, render_template, request, redirect, url_for
+from flask import Blueprint, render_template, request, redirect, url_for, flash
 import json
-from itertools import chain, combinations as it_combinations
+from itertools import permutations as it_permutations
 
 from app.utils.config_manager import load_config, save_config
 from app.utils.domain_config_manager import load_domain_config, save_domain_config
@@ -30,31 +30,68 @@ def combinations():
     domain_cfg = load_domain_config()
 
     must = cfg['parts'].get('must', [])
+    if not must:
+        flash('Bitte mindestens einen "Muss"-Begriff eingeben, bevor Kombinationen erstellt werden.', 'danger')
+        return redirect(url_for('frontend.parts'))
+
     should = cfg['parts'].get('should', [])
     can = cfg['parts'].get('can', [])
 
-    # Erzeuge alle Teilmengen von should+can
-    items = should + can
-    all_subsets = chain.from_iterable(it_combinations(items, n) for n in range(len(items)+1))
+    # 1) Basis: alle Permutationen der Muss-Begriffe mit None, '-', '_'
+    perms = list(it_permutations(must))
+    base_variants = []
+    for perm in perms:
+        perm_l = [p.lower() for p in perm]
+        pure = ''.join(perm_l)
+        base_variants.append(pure)
+        base_variants.append('-'.join(perm_l))
+        base_variants.append('_'.join(perm_l))
+    base_variants = list(dict.fromkeys(base_variants))
 
-    combos_full = []
-    for subset in all_subsets:
-        parts = must + list(subset)
-        if not parts:
-            continue
-        # Varianten ohne und mit Separatoren
-        combos_full.append(''.join(parts))
-        combos_full.append('-'.join(parts))
-        combos_full.append('_'.join(parts))
-    # Duplikate entfernen und Reihenfolge bewahren
-    combos_full = list(dict.fromkeys(combos_full))
+    # 2) Sollte-Varianten: nur in Kombination mit Muss
+    should_variants = []
+    for perm in perms:
+        perm_l = [p.lower() for p in perm]
+        pure = ''.join(perm_l)
+        for term in should:
+            term_l = term.lower()
+            # Prefix
+            should_variants.append(term_l + pure)
+            should_variants.append(term_l + '-' + pure)
+            should_variants.append(term_l + '_' + pure)
+            # Suffix
+            should_variants.append(pure + term_l)
+            should_variants.append(pure + '-' + term_l)
+            should_variants.append(pure + '_' + term_l)
+            # Insertion zwischen Muss-Begriffen
+            for i in range(1, len(perm_l)):
+                part1 = ''.join(perm_l[:i])
+                part2 = ''.join(perm_l[i:])
+                should_variants.append(part1 + term_l + part2)
+                should_variants.append(part1 + '-' + term_l + '-' + part2)
+                should_variants.append(part1 + '_' + term_l + '_' + part2)
+    should_variants = list(dict.fromkeys(should_variants))
+
+    # 3) Kann-Varianten: ausschließlich als Suffix
+    combined_pre_can = base_variants + should_variants
+    can_variants = []
+    for combo in combined_pre_can:
+        for term in can:
+            term_l = term.lower()
+            can_variants.append(combo + term_l)
+            can_variants.append(combo + '-' + term_l)
+            can_variants.append(combo + '_' + term_l)
+    can_variants = list(dict.fromkeys(can_variants))
+
+    # Gesamtliste aller Kombinationen
+    combos_full = list(dict.fromkeys(base_variants + should_variants + can_variants))
     total = len(combos_full)
 
-    # Vollständige Liste zwischenspeichern
+    # Speichern für Auswahl/Ergebnis
     domain_cfg['combinations'] = combos_full
 
     if request.method == 'POST':
-        max_combinations = int(request.form.get('max_combinations', domain_cfg.get('max_combinations', 20)))
+        max_combinations = int(request.form.get('max_combinations', domain_cfg.get('max_combinations', total)))
         force_all = 'force_all' in request.form
         selected = request.form.getlist('combinations')
         action = request.form.get('action')
@@ -67,17 +104,17 @@ def combinations():
         if action == 'next':
             return redirect(url_for('frontend.tlds_import'))
     else:
-        max_combinations = domain_cfg.get('max_combinations', 20)
+        max_combinations = domain_cfg.get('max_combinations', total)
         force_all = domain_cfg.get('force_all', False)
         selected = domain_cfg.get('selected_combinations', [])
 
-    # Bestimmen, welche Kombinationen angezeigt werden
+    # Auswahl, welche angezeigt werden
     if total > max_combinations and not force_all:
         display_combos = combos_full[:max_combinations]
     else:
         display_combos = combos_full
 
-    # Heatmap-Klasse bestimmen
+    # Heatmap-Klasse
     if total <= max_combinations:
         heatmap = 'text-success'
     elif total <= max_combinations * 2:
