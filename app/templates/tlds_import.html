@@ -1,0 +1,11 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>TLD‑Import</h1>
+<form method="post">
+  <div class="mb-3">
+    <label for="tldsRaw" class="form-label">TLDs als JSON‑Liste oder kommasepariert:</label>
+    <textarea class="form-control" id="tldsRaw" name="tlds_raw" rows="3">{{ tlds_raw }}</textarea>
+  </div>
+  <button type="submit" class="btn btn-success">Weiter zur TLD‑Auswahl</button>
+</form>
+{% endblock %}

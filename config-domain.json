@@ -1,0 +1,19 @@
+{
+  "parts": {
+    "must": [],
+    "should": [],
+    "can": []
+  },
+  "settings": {
+    "max_combinations": 20,
+    "force_all": false
+  },
+  "selected_combinations": [
+    ""
+  ],
+  "combinations": [
+    ""
+  ],
+  "max_combinations": 12,
+  "force_all": false
+}
