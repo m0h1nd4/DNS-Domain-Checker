@@ -1,0 +1,31 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Ergebnisse</h1>
+<table class="table table-dark table-striped">
+  <thead>
+    <tr>
+      <th>Domain</th>
+      <th>Status</th>
+      <th>IP</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in results %}
+      <tr>
+        <td>{{ r.domain }}.{{ r.tld }}</td>
+        <td>
+          {% if r.status == 'available' %}
+            <span class="text-success">✓ verfügbar</span>
+          {% elif r.status == 'taken' %}
+            <span class="text-danger">✗ belegt</span>
+          {% else %}
+            <span class="text-warning">! fehler</span>
+          {% endif %}
+        </td>
+        <td>{{ r.ip or '-' }}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+<a href="{{ url_for('frontend.parts') }}" class="btn btn-success">Neuer Check</a>
+{% endblock %}

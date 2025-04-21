@@ -1,0 +1,42 @@
+{% extends 'base.html' %}
+{% block content %}
+<h1>Kombinationen</h1>
+
+<p>
+  Anzahl möglicher Kombinationen:
+  <span class="{{ heatmap }}">{{ total }}</span>
+</p>
+
+<form method="post">
+  <div class="mb-3">
+    <label for="maxCombinations" class="form-label">
+      Maximale Anzahl anzeigen (Slider): <output id="maxOut">{{ max_combinations }}</output>
+    </label>
+    <input type="range" class="form-range" id="maxCombinations" name="max_combinations"
+           min="1" max="100" value="{{ max_combinations }}"
+           oninput="document.getElementById('maxOut').value=this.value">
+  </div>
+
+  <div class="form-check mb-3">
+    <input class="form-check-input" type="checkbox" id="forceAll" name="force_all"
+           {% if force_all %}checked{% endif %}>
+    <label class="form-check-label text-light" for="forceAll">
+      Alle Kombinationen anzeigen
+    </label>
+  </div>
+
+  <div class="mb-3">
+    {% for combo in combinations %}
+      <div class="form-check">
+        <input class="form-check-input" type="checkbox" value="{{ combo }}"
+               id="combo{{ loop.index }}" name="combinations"
+               {% if combo in selected %}checked{% endif %}>
+        <label class="form-check-label text-light" for="combo{{ loop.index }}">{{ combo }}</label>
+      </div>
+    {% endfor %}
+  </div>
+
+  <button type="submit" name="action" value="apply" class="btn btn-primary">Anwenden</button>
+  <button type="submit" name="action" value="next" class="btn btn-success">Weiter zur TLD‑Import</button>
+</form>
+{% endblock %}
