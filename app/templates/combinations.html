@@ -13,7 +13,7 @@
       Maximale Anzahl anzeigen (Slider): <output id="maxOut">{{ max_combinations }}</output>
     </label>
     <input type="range" class="form-range" id="maxCombinations" name="max_combinations"
-           min="1" max="100" value="{{ max_combinations }}"
+           min="1" max="{{ total }}" value="{{ max_combinations }}"
            oninput="document.getElementById('maxOut').value=this.value">
   </div>
 
