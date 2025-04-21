@@ -38,8 +38,8 @@ A Flask-based web application that allows you to generate domain name combinatio
 
 1. **Clone the repository**  
    ```bash
-   git clone https://your-repo-url/flask_dns_checker.git
-   cd flask_dns_checker
+   git clone https://github.com/m0h1nd4/DNS-Domain-Checker.git
+   cd DNS-Domain-Checker.git
    ```
 
 2. **Create & activate a virtual environment (recommended)**  
